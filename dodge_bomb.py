@@ -1,6 +1,7 @@
 import os
 import random
 import sys
+import time
 import pygame as pg
 
 
@@ -9,9 +10,8 @@ DELTA={ #移動量辞書
     pg.K_UP: (0,-5),
     pg.K_DOWN: (0, 5),
     pg.K_LEFT: (-5, 0),
-    pg.K_RIGHT: (5, 0)}
-
-
+    pg.K_RIGHT: (5, 0)
+}
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def check_bound(obj_rct:pg.Rect) -> tuple[bool, bool]:
@@ -22,6 +22,34 @@ def check_bound(obj_rct:pg.Rect) -> tuple[bool, bool]:
         tate = False
     return yoko, tate
 
+def Gameover(screen):
+    go_img = pg.Surface((WIDTH,HEIGHT))
+    pg.draw.rect(go_img,(0,0,0),(0,0,WIDTH,HEIGHT),width=0)
+    go_rct = go_img.get_rect()
+    go_img.set_alpha(200)
+    screen.blit(go_img,go_rct) #画面を暗くする
+    fonto = pg.font.Font(None,100)
+    txt = fonto.render("Gameover", True, (255,255,255))
+    screen.blit(txt,[600, 400])
+    koka_img = pg.transform.rotozoom(pg.image.load("fig/8.png"),0,2.0)
+    koka_rct = koka_img.get_rect()
+    koka_rct.center = 500, 450
+    screen.blit(koka_img, koka_rct) #左側のこうかとんを表示
+    koka_rct.center = 1100, 450
+    screen.blit(koka_img, koka_rct) #右側のこうかとんを表示
+    pg.display.update()
+    time.sleep(5)
+
+def times():
+    new_lst = []
+    accs = [a for a in range(1,11)]
+    for r in range(1,11):
+        bd_img = pg.Surface((20*r,20*r))
+        bd_img.set_colorkey((0,0,0))
+        pg.draw.circle(bd_img,(255,0,0),(10*r,10*r),10*r)
+        new_lst.append(bd_img)
+    return accs
+
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -29,7 +57,6 @@ def main():
     kk_img = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 2.0)
     kk_rct = kk_img.get_rect()
     kk_rct.center = 900, 400
-
     bd_img = pg.Surface((20, 20))
     bd_img.set_colorkey((0, 0, 0))
     pg.draw.circle(bd_img, (255, 0, 0), (10, 10), 10)
@@ -43,16 +70,15 @@ def main():
             if event.type == pg.QUIT: 
                 return
         if kk_rct.colliderect(bd_rct):
-            print("Game Over")
+            Gameover(screen)
             return
         screen.blit(bg_img, [0, 0]) 
-
         key_lst = pg.key.get_pressed()
         sum_mv = [0, 0]
         for k, v in DELTA.items():
             if key_lst[k]:
-                sum_mv[0] +=v[0]
-                sum_mv[1] =-v[1]
+               sum_mv[0] += v[0]
+               sum_mv[1] += v[1]
         #if key_lst[pg.K_UP]:
         #    sum_mv[1] -= 5
         #if key_lst[pg.K_DOWN]:
@@ -65,7 +91,6 @@ def main():
         if check_bound(kk_rct) != (True, True):
             kk_rct.move_ip(-sum_mv[0], -sum_mv[1])
         screen.blit(kk_img, kk_rct)
-
         bd_rct.move_ip(vx, vy)       
         screen.blit(bd_img, bd_rct)
         yoko, tate = check_bound(bd_rct)
